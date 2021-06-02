@@ -1,21 +1,31 @@
 package com.akaaka.figaro.activities.Main.controller
 
 import android.app.Activity
+import android.app.AlarmManager
 import android.app.AlertDialog
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.recyclerview.widget.RecyclerView
 import com.akaaka.figaro.R
+import com.akaaka.figaro.ReminderBroadcast
+import com.akaaka.figaro.activities.Main.MainActivity
 import com.akaaka.figaro.activities.Main.model.AppointmentData
 import com.akaaka.figaro.network.NetworkUtils
 import org.json.JSONObject
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class AppointmentAdapter(private val appointmentList : ArrayList<AppointmentData>, val context: Context) : RecyclerView.Adapter<AppointmentAdapter.ViewHolder>() {
@@ -30,6 +40,7 @@ class AppointmentAdapter(private val appointmentList : ArrayList<AppointmentData
         return appointmentList.size
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val appointment = appointmentList[position]
 
@@ -53,6 +64,7 @@ class AppointmentAdapter(private val appointmentList : ArrayList<AppointmentData
                 .setIcon(android.R.drawable.ic_dialog_alert)
                 .setPositiveButton(android.R.string.yes
                 ) { _, _ ->
+                    // delete from server
                     val jsonDelete = JSONObject().put("appointment_id", appointment.id)
                     val reqDeleteAppointment = NetworkUtils.httpRequest("delete", "figaro/appointment", jsonDelete)
                     NetworkUtils.makeRefreshingRequest(reqDeleteAppointment, ::postDeleteRequest, context as Activity, false)

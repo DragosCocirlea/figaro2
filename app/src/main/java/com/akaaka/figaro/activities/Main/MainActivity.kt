@@ -1,6 +1,9 @@
 package com.akaaka.figaro.activities.Main
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentTransaction
@@ -23,6 +26,8 @@ class MainActivity : AppCompatActivity(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        createNotificationChannel()
 
         profileFragment = ProfileFragment.newInstance()
         homeFragment = HomeFragment.newInstance()
@@ -82,5 +87,19 @@ class MainActivity : AppCompatActivity(),
             .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
             .commit()
 
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "FigaroReminderChannel"
+            val description = "Channel for Figaro Reminder"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+
+            val channel = NotificationChannel("notifyFigaro", name, importance)
+            channel.description = description
+
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 }

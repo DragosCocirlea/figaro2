@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.widget.DatePicker
@@ -80,6 +81,9 @@ class RegisterActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
         val reqRegister = NetworkUtils.httpRequest("post", "registration", dataRegister)
         reqRegister.response { _, respRegister, _ ->
+
+            Log.d("#######", respRegister.toString());
+
             val jsonResp = JSONObject(String(respRegister.data))
             val msg = jsonResp["msg"].toString()
             when {

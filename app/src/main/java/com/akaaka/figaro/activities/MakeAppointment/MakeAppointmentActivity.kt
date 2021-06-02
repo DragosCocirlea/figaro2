@@ -1,19 +1,29 @@
 package com.akaaka.figaro.activities.MakeAppointment
 
-import android.app.AlertDialog
-import android.app.DatePickerDialog
+import android.app.*
+import android.content.Context
 import android.content.DialogInterface
+import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.DatePicker
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import com.akaaka.figaro.R
+import com.akaaka.figaro.ReminderBroadcast
+import com.akaaka.figaro.activities.Main.MainActivity
 import com.akaaka.figaro.activities.MakeAppointment.model.BarberData
 import com.akaaka.figaro.activities.MakeAppointment.model.ServiceData
 import com.akaaka.figaro.network.NetworkUtils
 import kotlinx.android.synthetic.main.activity_make_appointment.*
 import org.json.JSONArray
 import org.json.JSONObject
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -153,6 +163,7 @@ class MakeAppointmentActivity : AppCompatActivity(), DatePickerDialog.OnDateSetL
         NetworkUtils.makeRefreshingRequest(reqAppointment, ::makeAppointmentResult,this, true)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun makeAppointmentResult(responseData: String) {
         val jsonResp = JSONObject(responseData)
         val code = jsonResp.getInt("code")
@@ -161,6 +172,21 @@ class MakeAppointmentActivity : AppCompatActivity(), DatePickerDialog.OnDateSetL
         Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
 
         if (code == 1) {
+            val date = jsonResp.getString("date")
+            val time = jsonResp.getString("time")
+
+            val intent = Intent(this, ReminderBroadcast::class.java)
+            val pendingIntent = PendingIntent.getBroadcast(this, 0, intent, 0)
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+            val formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy HH:mm");
+            val dt = LocalDateTime.parse("$date $time", formatter).minusHours(1);
+            val zoneId = ZoneId.systemDefault()
+            val epoch = dt.atZone(zoneId).toEpochSecond()
+
+            Log.d("SSMMDD", epoch.toString())
+
+            alarmManager.set(AlarmManager.RTC_WAKEUP, epoch, pendingIntent)
             onBackPressed()
         }
 
@@ -175,7 +201,7 @@ class MakeAppointmentActivity : AppCompatActivity(), DatePickerDialog.OnDateSetL
             Calendar.getInstance().get(Calendar.MONTH),
             Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
         )
-
+        datePickerDialog.datePicker.minDate = Calendar.getInstance().timeInMillis
         datePickerDialog.show()
     }
 
